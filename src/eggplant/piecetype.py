@@ -34,8 +34,14 @@ class PieceType(Enum):
     EUM = ENEMY + UM
     ERY = ENEMY + RY
 
-def is_self(piece):
-    return PieceType.FU <= piece and piece <= PieceType.RY
+    @classmethod
+    def is_self(self, piece):
+        return PieceType.FU <= piece and piece <= PieceType.RY
 
-def is_enemy(piece):
-    return piece & PieceType.ENEMY
+    @classmethod
+    def is_enemy(self, piece):
+        return piece & PieceType.ENEMY
+
+    @classmethod
+    def is_promoted(self, piece):
+        return (PieceType.TO.value <= piece <= PieceType.RY.value or PieceType.ETO.value <= piece <= PieceType.ERY.value)

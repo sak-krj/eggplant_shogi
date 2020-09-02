@@ -1,5 +1,3 @@
-from itertools import islice
-# from eggplant import piecetype
 from eggplant.piecetype import PieceType as PT
 
 class Position:
@@ -9,7 +7,6 @@ class Position:
     TO_DAN = ("","一","二","三","四","五","六","七","八","九")
 
     def __init__(self):
-        # self.board = [[0 for siji in range(11)] for dan in range(11)]
         self.initialize_board()
 
     def initialize_board(self):
@@ -55,6 +52,51 @@ class Position:
             elif p > 1:
                 print("{}{} ".format(Position.PIECE_STR[p], p))
         print()
+
+    def move(self, move_info):
+        piece = move_info.piecetype.value
+        from_suji, from_dan = move_info.src
+        to_suji, to_dan = move_info.dist
+
+        turn = True if PT.FU.value <= piece <= PT.RY.value else False
+
+        taken = self.board[to_dan][to_suji]
+        if PT.is_promoted(taken):
+            taken -= PT.PROMOTED.value
+        if taken != PT.EMPTY.value:
+            self.holding[turn][taken]
+
+        if from_suji:
+            self.board[from_dan][from_suji] = PT.EMPTY.value
+        else:
+            self.holding[turn][piece] -= 1
+
+        if move_info.promote:
+            self.board[to_dan][to_suji] = piece + PT.PROMOTED.value 
+        else:
+            self.board[to_dan][to_suji] = piece
+
     @staticmethod
     def in_board(dan,suji):
         return (1 <= dan <= 9 and 1 <= suji <= 9)
+
+
+class MoveInfo():
+
+    def __init__(self, src, dist, piecetype, promote):
+        self.src = src
+        self.dist = dist
+        self.piecetype = piecetype
+        self.promote = promote
+
+    def show(self):
+        if self.src[0] != 0:
+            print("{}{}".format(self.src[0], self.src[1]), end="")
+        print("{}{}".format(self.dist[0], self.dist[1]), end="")
+        print("{}".format(Position.PIECE_STR[self.piecetype.value]), end="")
+        if self.src[0] == 0:
+            print("打  ")
+        elif self.promote:
+            print("成")
+        else:
+            print("  ")
