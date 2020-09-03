@@ -1,10 +1,11 @@
+# from eggplant.types import Types
+from eggplant.types import Types
 from eggplant.piecetype import PieceType as PT
+from eggplant.move import Move
 
 class Position:
 
-    PIECE_STR = ("   "," 歩"," 香"," 桂"," 銀"," 金"," 角"," 飛"," 玉"," と"," 杏"," 圭"," 全"," 金"," 馬"," 竜","   ","v歩","v香","v桂","v銀","v金","v角","v飛","v玉","vと","v杏","v圭","v全","v金","v馬","v竜")
     BASE_POS = [(1,1,1,1,1,1,1,1,1), (0,6,0,0,0,0,0,7,0), (2,3,4,5,8,5,4,3,2)]
-    TO_DAN = ("","一","二","三","四","五","六","七","八","九")
 
     def __init__(self):
         self.initialize_board()
@@ -25,53 +26,54 @@ class Position:
         self.board = [[PT.EMPTY.value if Position.in_board(d,s) else PT.OUT_OF_BOARD.value for s in range(11)] for d in range(11)]
 
     def clear_holding(self):
-        self.holding = [[0 for _ in range(8)] for _ in range(2)]
+        self.holding = [[0 for _ in range(9)] for _ in range(2)]
 
     def show(self):
         print("先手 持ち駒")
-        for p in self.holding[0]:
-            if p == 1:
-                print("{} ".format(Position.PIECE_STR[p]))
-            elif p > 1:
-                print("{}{} ".format(Position.PIECE_STR[p], p))
+        for p,num in enumerate(self.holding[0]):
+            if num == 1:
+                print("{} ".format(Types.PIECE_STR[p]), end="")
+            elif num > 1:
+                print("{}{} ".format(Types.PIECE_STR[p], num), end="")
         print("")
         print("  　９　８　７　６　５　４　３　２　１ ")
         print("  +---+---+---+---+---+---+---+---+---+")
 
         for dan in range(1,10):
-            print("{}|".format(Position.TO_DAN[dan]), end="")
+            print("{}|".format(Types.DAN_STR[dan]), end="")
             for suji in range(9, 0, -1):
-                print("{}|".format(Position.PIECE_STR[self.board[dan][suji]]), end="")
+                print("{}|".format(Types.PIECE_STR[self.board[dan][suji]]), end="")
             print()
         print("  +---+---+---+---+---+---+---+---+---+")
         print()
         print("後手 持ち駒 ")
-        for p in self.holding[1]:
-            if p == 1:
-                print("{} ".format(Position.PIECE_STR[p]))
-            elif p > 1:
-                print("{}{} ".format(Position.PIECE_STR[p], p))
+        for p,num in enumerate(self.holding[1]):
+            if num == 1:
+                print("{} ".format(Types.PIECE_STR[p]), end="")
+            elif num > 1:
+                print("{}{} ".format(Types.PIECE_STR[p], num), end="")
         print()
 
-    def move(self, move_info):
-        piece = move_info.piecetype.value
-        from_suji, from_dan = move_info.src
-        to_suji, to_dan = move_info.dist
-
-        turn = True if PT.FU.value <= piece <= PT.RY.value else False
+    def move(self, move):
+        piece = move.piecetype.value
+        from_suji, from_dan = move.src
+        to_suji, to_dan = move.dist
 
         taken = self.board[to_dan][to_suji]
+    
         if PT.is_promoted(taken):
             taken -= PT.PROMOTED.value
         if taken != PT.EMPTY.value:
-            self.holding[turn][taken]
+            if PT.EFU.value <= taken <= PT.ERY.value:
+                taken -= PT.ENEMY.value
+            self.holding[move.color][taken] += 1
 
         if from_suji:
             self.board[from_dan][from_suji] = PT.EMPTY.value
         else:
-            self.holding[turn][piece] -= 1
+            self.holding[move.color][piece] -= 1
 
-        if move_info.promote:
+        if move.promoted:
             self.board[to_dan][to_suji] = piece + PT.PROMOTED.value 
         else:
             self.board[to_dan][to_suji] = piece
@@ -80,23 +82,3 @@ class Position:
     def in_board(dan,suji):
         return (1 <= dan <= 9 and 1 <= suji <= 9)
 
-
-class MoveInfo():
-
-    def __init__(self, src, dist, piecetype, promote):
-        self.src = src
-        self.dist = dist
-        self.piecetype = piecetype
-        self.promote = promote
-
-    def show(self):
-        if self.src[0] != 0:
-            print("{}{}".format(self.src[0], self.src[1]), end="")
-        print("{}{}".format(self.dist[0], self.dist[1]), end="")
-        print("{}".format(Position.PIECE_STR[self.piecetype.value]), end="")
-        if self.src[0] == 0:
-            print("打  ")
-        elif self.promote:
-            print("成")
-        else:
-            print("  ")

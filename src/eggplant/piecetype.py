@@ -1,4 +1,5 @@
 from enum import Enum
+from eggplant.types import Types
 
 class PieceType(Enum):
     OUT_OF_BOARD = 64
@@ -45,3 +46,14 @@ class PieceType(Enum):
     @classmethod
     def is_promoted(self, piece):
         return (PieceType.TO.value <= piece <= PieceType.RY.value or PieceType.ETO.value <= piece <= PieceType.ERY.value)
+
+    @classmethod
+    def value_of(self, val):
+        for e in PieceType:
+            if val == e.value:
+                return e
+
+    @classmethod
+    def string_of(self, s, color):
+        val = Types.PIECE＿CSA.index(s) + color * PieceType.ENEMY.value
+        return PieceType.value_of(val)
